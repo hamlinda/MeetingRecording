@@ -19,7 +19,7 @@ If Not fso.FileExists(fso.BuildPath(currentDir, "frontend\dist\index.html")) The
     MsgBox "Frontend production build missing! Please run 'build_native.bat' before launching if you plan to use production mode.", 48, "Warning"
 End If
 
-' 1. Cleanup: Ensure port 8081 is free (if old backend got stuck)
+' 1. Cleanup: Ensure port 8083 is free (if old backend got stuck)
 shell.Run "taskkill /F /IM pythonw.exe /T", 0, True
 WScript.Sleep 1000
 
@@ -39,7 +39,7 @@ ready = False
 Set http = CreateObject("MSXML2.ServerXMLHTTP")
 For i = 1 To 15
     On Error Resume Next
-    http.Open "GET", "http://127.0.0.1:8081/api/config", False
+    http.Open "GET", "http://127.0.0.1:8083/api/config", False
     http.Send
     If Err.Number = 0 And http.Status = 200 Then
         ready = True
@@ -50,7 +50,7 @@ For i = 1 To 15
 Next
 
 If Not ready Then
-    MsgBox "WARNING: Backend did not respond on 127.0.0.1:8081. Application may not load correctly.", 48, "Warning"
+    MsgBox "WARNING: Backend did not respond on 127.0.0.1:8083. Application may not load correctly.", 48, "Warning"
 End If
 
 ' 4. Start Edge in app mode (emulates native window)
@@ -66,7 +66,7 @@ ElseIf fso.FileExists(edgePaths(1)) Then
 End If
 
 Dim appCmd
-appCmd = edgePath & " --app=http://127.0.0.1:8081"
+appCmd = edgePath & " --app=http://127.0.0.1:8083"
 shell.CurrentDirectory = currentDir
 
 ' Block until Edge closes

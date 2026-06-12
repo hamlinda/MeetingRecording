@@ -3,7 +3,7 @@ import time
 import os
 import json
 
-BASE_URL = "http://127.0.0.1:8081"
+BASE_URL = "http://127.0.0.1:8083"
 
 print("1. Starting test recording...")
 start_res = requests.post(f"{BASE_URL}/api/recording/start", json={"record_mic": True})

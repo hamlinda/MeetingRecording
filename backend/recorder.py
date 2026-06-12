@@ -1,4 +1,11 @@
-import pyaudiowpatch as pyaudio
+try:
+    import pyaudiowpatch as pyaudio
+except ImportError:
+    try:
+        import pyaudio
+    except ImportError:
+        pyaudio = None
+
 import wave
 import threading
 import logging
@@ -10,7 +17,11 @@ logger = logging.getLogger(__name__)
 
 class AudioRecorder:
     def __init__(self):
-        self.p = pyaudio.PyAudio()
+        if pyaudio is None:
+            self.p = None
+            logger.warning("PyAudio/pyaudiowpatch is not installed. Audio recording features are disabled.")
+        else:
+            self.p = pyaudio.PyAudio()
         self.is_recording = False
         
         self.stream_loopback = None
@@ -27,6 +38,9 @@ class AudioRecorder:
         self.record_mic = False
         
     def start(self, record_mic: bool = True):
+        if pyaudio is None or self.p is None:
+            raise Exception("Audio recording is disabled because PyAudio/pyaudiowpatch is not installed on this system.")
+
         if self.is_recording:
             return
             

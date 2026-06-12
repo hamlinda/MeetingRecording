@@ -1,1 +1,1 @@
-{"ollama_url": "http://10.0.0.200:11434", "ollama_model": "llama3.2:1b", "summary_prompt": "Please summarize the following meeting transcript. Highlight key decisions and action items.\n\nInclude all action items in clearly articulated bold settings", "system_speaker_name": "Dan"}
+{"ollama_url": "http://10.0.0.192:11434", "ollama_model": "llama3.2:1b", "summary_prompt": "Please summarize the following meeting transcript. Highlight key decisions and action items.\n\nInclude all action items in clearly articulated bold settings", "system_speaker_name": "Dan"}

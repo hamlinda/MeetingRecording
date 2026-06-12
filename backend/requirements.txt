@@ -4,3 +4,4 @@ faster-whisper
 requests
 pyaudiowpatch
 pydantic
+python-multipart

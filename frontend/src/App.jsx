@@ -14,6 +14,7 @@ function App() {
   const [captureVideo, setCaptureVideo] = useState(false)
   const [aiStatus, setAiStatus] = useState('checking')
   const [liveTranscript, setLiveTranscript] = useState("")
+  const [audioAvailable, setAudioAvailable] = useState(true)
   const pollInterval = useRef(null)
   const mediaRecorderRef = useRef(null)
   const videoChunksRef = useRef([])
@@ -121,6 +122,7 @@ function App() {
       const res = await fetch('/api/recording/status')
       const data = await res.json()
       setIsRecording(data.is_recording)
+      setAudioAvailable(data.audio_recording_available !== false)
     } catch (e) { console.error("Could not fetch status", e) }
   }
 
@@ -243,6 +245,7 @@ function App() {
     } catch (e) { alert("Error: " + e.message) }
   }
 
+  const isServicesMissing = !audioAvailable || aiStatus !== 'online'
   const selectedRecording = recordings.find(r => r.id === selectedId)
 
   return (
@@ -259,19 +262,48 @@ function App() {
                     <span style={{ fontSize: '0.65rem', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: 700 }}>AI {aiStatus}</span>
                 </div>
              </div>
-             <button className="btn" style={{ padding: '0.4rem', borderRadius: '4px' }} onClick={() => setIsConfigOpen(!isConfigOpen)}>
+             <button 
+               className="btn" 
+               style={{ padding: '0.4rem', borderRadius: '4px', opacity: isServicesMissing ? 0.5 : 1, cursor: isServicesMissing ? 'not-allowed' : 'pointer' }} 
+               onClick={() => !isServicesMissing && setIsConfigOpen(!isConfigOpen)}
+               disabled={isServicesMissing}
+               title={isServicesMissing ? "System services are offline" : "Configure AI settings"}
+             >
                ⚙️
              </button>
-           </div>
+            </div>
         </header>
 
         <section className="sidebar-controls">
+          {isServicesMissing && (
+            <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.4)', borderRadius: '8px', padding: '12px', margin: '0 12px 12px 12px', fontSize: '0.8rem', lineHeight: '1.4', color: '#fca5a5' }}>
+               <p style={{ margin: 0, fontWeight: 'bold', marginBottom: '4px' }}>⚠️ System Requirements Missing</p>
+               <p style={{ margin: 0 }}>
+                 Audio recording components or Ollama AI services are not fully running on this host server.
+                 Recording and configuration have been disabled.
+               </p>
+               <p style={{ margin: '8px 0 0 0', fontWeight: 600 }}>
+                 Please download the Windows Standalone (below) or clone the repository from <a href="https://github.com/hamlinda/Meetingrecording.git" target="_blank" rel="noopener noreferrer" style={{ color: '#a5b4fc', textDecoration: 'underline' }}>github.com/hamlinda/Meetingrecording.git</a> to run locally.
+               </p>
+               <div style={{ marginTop: '8px', padding: '8px', background: 'rgba(0,0,0,0.25)', borderRadius: '6px', fontSize: '0.72rem', color: '#e2e8f0', textAlign: 'left' }}>
+                 <strong style={{ display: 'block', marginBottom: '2px' }}>Windows Standalone Setup:</strong>
+                 <ol style={{ margin: 0, paddingLeft: '14px' }}>
+                   <li>Extract the downloaded ZIP archive.</li>
+                   <li>Double-click <code>setup.bat</code> to initialize dependencies and compile assets.</li>
+                   <li>Double-click <code>Launch.vbs</code> to run the application natively.</li>
+                 </ol>
+               </div>
+            </div>
+          )}
           <div className="recorder-container">
             <div className="record-btn-wrapper">
               {isRecording && <div className="record-btn-pulse"></div>}
               <button 
                 className={`record-btn ${isRecording ? 'recording' : ''}`}
                 onClick={toggleRecording}
+                disabled={isServicesMissing && !isRecording}
+                style={{ opacity: (isServicesMissing && !isRecording) ? 0.4 : 1, cursor: (isServicesMissing && !isRecording) ? 'not-allowed' : 'pointer' }}
+                title={isServicesMissing ? "Recording is disabled due to missing local services" : "Start recording"}
               >
                 {isRecording ? 'STOP' : 'REC'}
               </button>
@@ -286,7 +318,7 @@ function App() {
                           type="checkbox" 
                           id="micToggle" 
                           checked={captureMic} 
-                          disabled={isRecording}
+                          disabled={isRecording || isServicesMissing}
                           onChange={e => setCaptureMic(e.target.checked)} 
                         />
                         <span className="slider"></span>
@@ -301,7 +333,7 @@ function App() {
                           type="checkbox" 
                           id="videoToggle" 
                           checked={captureVideo} 
-                          disabled={isRecording}
+                          disabled={isRecording || isServicesMissing}
                           onChange={e => setCaptureVideo(e.target.checked)} 
                         />
                         <span className="slider"></span>
@@ -312,11 +344,25 @@ function App() {
             <div style={{ marginTop: '1.25rem', width: '100%' }}>
                 <button 
                   className="btn btn-secondary" 
-                  style={{ width: '100%', gap: '8px' }}
-                  onClick={openTranscriptionWindow}
+                  style={{ width: '100%', gap: '8px', opacity: isServicesMissing ? 0.5 : 1, cursor: isServicesMissing ? 'not-allowed' : 'pointer' }}
+                  onClick={() => !isServicesMissing && openTranscriptionWindow()}
+                  disabled={isServicesMissing}
                 >
                   📺 Live View Window
                 </button>
+            </div>
+
+            <div style={{ marginTop: '1rem', width: '100%', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1rem' }}>
+                <a 
+                  href="/api/download/windows-standalone"
+                  className="btn"
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: 'rgba(255,255,255,0.1)', color: '#fff', textDecoration: 'none', fontSize: '0.85rem' }}
+                >
+                  📦 Windows Standalone
+                </a>
+                <p style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginTop: '8px', textAlign: 'center', lineHeight: '1.4' }}>
+                  ⚠️ <strong>Notice:</strong> If you are not running the backend on the local Windows system accessing it, this standalone mode will not work.
+                </p>
             </div>
           </div>
         </section>
@@ -389,7 +435,7 @@ function App() {
                   <button 
                     className="btn btn-primary" 
                     onClick={() => {
-                      const url = `http://127.0.0.1:8081/recordings/${selectedRecording.id}/${selectedRecording.media_path.split(/[\\/]/).pop()}`
+                      const url = `/recordings/${selectedRecording.id}/${selectedRecording.media_path.split(/[\\/]/).pop()}`
                       window.open(url, '_blank')
                     }}
                   >
@@ -412,11 +458,11 @@ function App() {
                  {selectedRecording.media_path && (
                     selectedRecording.media_path.toLowerCase().endsWith('.webm') ? (
                       <video controls className="video-player-mini" style={{ height: '32px', maxWidth: '300px', borderRadius: '4px', backgroundColor: '#000' }}>
-                          <source src={`http://127.0.0.1:8081/recordings/${selectedRecording.id}/${selectedRecording.media_path.split(/[\\/]/).pop()}`} type="video/webm" />
+                          <source src={`/recordings/${selectedRecording.id}/${selectedRecording.media_path.split(/[\\/]/).pop()}`} type="video/webm" />
                       </video>
                     ) : (
                       <audio controls className="audio-player-mini" style={{ height: '32px' }}>
-                          <source src={`http://127.0.0.1:8081/recordings/${selectedRecording.id}/${selectedRecording.media_path.split(/[\\/]/).pop()}`} type="audio/mpeg" />
+                          <source src={`/recordings/${selectedRecording.id}/${selectedRecording.media_path.split(/[\\/]/).pop()}`} type="audio/mpeg" />
                       </audio>
                     )
                  )}
@@ -425,7 +471,7 @@ function App() {
               {selectedRecording.media_path && selectedRecording.media_path.toLowerCase().endsWith('.webm') && (
                   <div style={{ marginBottom: '1rem', width: '100%', display: 'flex', justifyContent: 'center', backgroundColor: '#000', borderRadius: '8px', overflow: 'hidden' }}>
                       <video controls style={{ width: '100%', maxHeight: '400px' }}>
-                          <source src={`http://127.0.0.1:8081/recordings/${selectedRecording.id}/${selectedRecording.media_path.split(/[\\/]/).pop()}`} type="video/webm" />
+                          <source src={`/recordings/${selectedRecording.id}/${selectedRecording.media_path.split(/[\\/]/).pop()}`} type="video/webm" />
                       </video>
                   </div>
               )}

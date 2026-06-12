@@ -16,6 +16,8 @@ from fastapi import FastAPI, BackgroundTasks, HTTPException, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+from fastapi.responses import FileResponse
+import zipfile
 import shutil
 import uuid
 import traceback
@@ -477,7 +479,8 @@ def stop_recording(background_tasks: BackgroundTasks, video_data: Optional[Uploa
 def get_status():
     return {
         "is_recording": state.recorder.is_recording,
-        "current_recording_id": state.current_recording_id
+        "current_recording_id": state.current_recording_id,
+        "audio_recording_available": state.recorder.p is not None
     }
 
 @app.get("/api/recordings")
@@ -541,6 +544,53 @@ def get_ollama_models(url: str):
     except Exception as e:
         return {"status": "error", "detail": str(e), "models": []}
 
+@app.get("/api/download/windows-standalone")
+def download_windows_standalone(background_tasks: BackgroundTasks):
+    """Bundle the application files into a ZIP for local Windows execution."""
+    temp_dir = os.path.join(RECORDINGS_DIR, "tmp_downloads")
+    os.makedirs(temp_dir, exist_ok=True)
+    zip_filename = f"meeting_recorder_windows_{uuid.uuid4().hex[:8]}.zip"
+    zip_path = os.path.join(temp_dir, zip_filename)
+    
+    root_dir = os.path.abspath(os.path.join(BASE_DIR, ".."))
+    
+    try:
+        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            for root, dirs, files in os.walk(root_dir):
+                # Exclude version control, environments, node modules, cache, and recordings data
+                dirs[:] = [d for d in dirs if d not in ('.git', 'venv', '.venv', 'node_modules', 'recordings', '__pycache__')]
+                
+                for file in files:
+                    file_path = os.path.join(root, file)
+                    # Exclude logs, system tracking PIDs, and compiled python bytecode
+                    if file.endswith(('.log', '.pid', '.pyc', '.pyo', '.swp')):
+                        continue
+                    if 'backend/recordings' in file_path:
+                        continue
+                        
+                    # Write file with relative archive path
+                    arcname = os.path.relpath(file_path, root_dir)
+                    zipf.write(file_path, arcname)
+                    
+        # Schedule cleanup task to remove the zip after file is transmitted
+        def clean_temp_zip(path: str):
+            try:
+                if os.path.exists(path):
+                    os.remove(path)
+            except Exception as e:
+                logger.error(f"Error deleting temp zip: {e}")
+                
+        background_tasks.add_task(clean_temp_zip, zip_path)
+        
+        return FileResponse(
+            path=zip_path,
+            filename="meeting_recorder_windows.zip",
+            media_type="application/zip"
+        )
+    except Exception as e:
+        logger.error(f"Failed to generate windows standalone zip: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Setup static mounts LAST to avoid shadowing API routes
 app.mount("/recordings", StaticFiles(directory=RECORDINGS_DIR), name="recordings")
 
@@ -558,4 +608,6 @@ if __name__ == "__main__":
     import uvicorn
     import sys
     is_prod = os.environ.get("PRODUCTION") == "1" or sys.executable.lower().endswith("pythonw.exe")
-    uvicorn.run("main:app", host="127.0.0.1", port=8081, reload=not is_prod)
+    host = os.environ.get("HOST", "0.0.0.0")
+    port = int(os.environ.get("PORT", 8083))
+    uvicorn.run("main:app", host=host, port=port, reload=not is_prod)

@@ -57,9 +57,9 @@ Depending on how the application is deployed, the design is experienced in two d
 
 ### 💻 Standalone Desktop Experience (Windows native app mode)
 This mode provides a seamless desktop integration without keeping command prompt windows open.
-*   **Silent Background Startup (`Launch.vbs`)**: Double-clicking this script triggers WScript to start the FastAPI backend silently in the background using `pythonw.exe` on port `8081`. It terminates any old stuck backend processes beforehand.
-*   **Single-Port Serving**: The backend automatically detects production execution (`sys.executable` ending with `pythonw.exe` or `PRODUCTION=1`) and hosts the pre-built React files directly on FastAPI port `8081`.
-*   **Chromeless Chromium Window**: It launches Microsoft Edge in **Application Mode** (`msedge.exe --app=http://127.0.0.1:8081`). This spawns the interface in a dedicated window without browser navigation buttons, search bars, or tabs, mimicking a native desktop utility.
+*   **Silent Background Startup (`Launch.vbs`)**: Double-clicking this script triggers WScript to start the FastAPI backend silently in the background using `pythonw.exe` on port `8083`. It terminates any old stuck backend processes beforehand.
+*   **Single-Port Serving**: The backend automatically detects production execution (`sys.executable` ending with `pythonw.exe` or `PRODUCTION=1`) and hosts the pre-built React files directly on FastAPI port `8083`.
+*   **Chromeless Chromium Window**: It launches Microsoft Edge in **Application Mode** (`msedge.exe --app=http://127.0.0.1:8083`). This spawns the interface in a dedicated window without browser navigation buttons, search bars, or tabs, mimicking a native desktop utility.
 *   **Full Audio Loopback Capabilities**: In standalone mode, the app has direct access to the Windows WASAPI audio subsystems to capture loopback meetings.
 *   **Shutdown hook**: Closing the Edge browser window stops the session, and the script terminates any background python processes.
 
