@@ -8,6 +8,7 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
+frontend/node_modules/
 dist
 dist-ssr
 *.local
@@ -15,6 +16,12 @@ dist-ssr
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
+#Recordings
+backend/recordings/
+*.mp4
+*.webm
+*.wav
+
 .idea
 .DS_Store
 *.suo

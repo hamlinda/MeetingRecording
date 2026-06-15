@@ -1,0 +1,44 @@
+# Python virtual environments
+venv/
+.venv/
+backend/venv/
+
+# Node packages
+node_modules/
+frontend/node_modules/
+
+# Frontend builds
+dist/
+frontend/dist/
+
+# Python caching
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Log files
+*.log
+out.log
+err.log
+backend/backend_error.log
+crash_err.log
+crash_out.log
+
+# PID files
+*.pid
+.backend.pid
+
+# Recordings and audio/video files
+recordings/
+backend/recordings/
+*.wav
+*.mp4
+*.webm
+backend/test.mp4
+backend/test.wav
+backend/test.webm
+
+# OS files
+.DS_Store
+Thumbs.db
